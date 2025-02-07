@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -lGL -lGLU -lglut $(shell sdl2-config --cflags --libs) -lSDL2_image
 EXEC = main
 SRC_DIR = src
 OBJ_DIR = obj
