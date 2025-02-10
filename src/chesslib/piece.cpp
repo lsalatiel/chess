@@ -4,28 +4,28 @@
 constexpr int typeMask = 0b00111;
 constexpr int blackMask = 0b10000;
 constexpr int whiteMask = 0b01000;
-constexpr int colourMask = whiteMask | blackMask;
+constexpr int colorMask = whiteMask | blackMask;
 
-bool Piece::isColor(int piece, int colour) {
-    return (piece & colourMask) == colour;
+bool Piece::is_color(int piece, int colour) {
+    return (piece & colorMask) == colour;
 }
 
-int Piece::getColor(int piece) {
-    return piece & colourMask;
+int Piece::get_color(int piece) {
+    return piece & colorMask;
 }
 
-int Piece::getPieceType(int piece) {
+int Piece::get_piece_type(int piece) {
     return piece & typeMask;
 }
 
-bool Piece::isRookOrQueen(int piece) {
+bool Piece::is_rook_or_queen(int piece) {
     return (piece & 0b110) == 0b110;
 }
 
-bool Piece::isBishopOrQueen(int piece) {
+bool Piece::is_bishop_or_queen(int piece) {
     return (piece & 0b101) == 0b101;
 }
 
-bool Piece::isSlidingPiece(int piece) {
+bool Piece::is_sliding_piece(int piece) {
     return (piece & 0b100) != 0;
 }

@@ -5,11 +5,12 @@
 
 class Board {
     public:
-        int square[64];
+        int squares[64];
 
         Board();
         Board(std::string fen);
         void reset();
+        void make_move(int fromSquare, int toSquare, int piece);
 };
 
 #endif

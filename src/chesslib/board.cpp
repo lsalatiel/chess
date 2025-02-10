@@ -15,7 +15,20 @@ Board::Board(std::string fen) {
 
 void Board::reset() {
     for (int i = 0; i < 64; i++) {
-        square[i] = Piece::None;
+        squares[i] = Piece::None;
+    }
+}
+
+void Board::make_move(int fromSquare, int toSquare, int piece) {
+    if (toSquare < 0 || toSquare >= 64) {
+        return;
+    }
+    // basic move without rules
+    squares[toSquare] = piece;
+    squares[fromSquare] = Piece::None;
+    // PAWN
+    if (Piece::get_piece_type(piece) == Piece::Pawn) {
+
     }
 }
 
@@ -39,7 +52,7 @@ void loadPositionFromFen(std::string fen, Board &board) {
                 case 'k': pieceType = Piece::King; break;
                 case 'p': pieceType = Piece::Pawn; break;
             }
-            board.square[rank * 8 + file] = pieceType | pieceColor;
+            board.squares[rank * 8 + file] = pieceType | pieceColor;
             file++;
         }
     }
