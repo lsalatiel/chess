@@ -1,9 +1,18 @@
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_mouse.h>
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <unordered_map>
 #include "chesslib/include/board.h"
 #include "chesslib/include/piece.h"
+
+struct DragState {
+    bool dragging = false;
+    int selectedPiece = Piece::None;
+    int fromSquare = -1;
+    int mouseX = 0, mouseY = 0;
+};
 
 const int WINDOW_SIZE = 600;
 const int BOARD_SIZE = 8;
@@ -16,7 +25,8 @@ SDL_Color DARK = {181, 136, 99, 255};
 void cleanup(std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
 void load_piece_textures(SDL_Renderer* renderer, std::unordered_map<std::string, std::string> &pieceFiles, std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
 void draw_chess_board(SDL_Renderer *renderer);
-void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
+void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures, struct DragState &dragState);
+void handle_mouse_input(SDL_Event event, int board[64], struct DragState &dragState);
 std::string getPieceName(int piece);
 
 int main(int argc, char **argv) {
@@ -60,10 +70,16 @@ int main(int argc, char **argv) {
     bool running = true;
     SDL_Event event;
 
+    struct DragState dragState;
+
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
+            }
+            else if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
+                    event.type == SDL_MOUSEMOTION) && event.button.button == SDL_BUTTON_LEFT) {
+                handle_mouse_input(event, board.square, dragState);
             }
         }
 
@@ -72,7 +88,7 @@ int main(int argc, char **argv) {
         SDL_RenderClear(renderer);
 
         draw_chess_board(renderer);
-        draw_chess_pieces(renderer, board.square, pieceTextures);
+        draw_chess_pieces(renderer, board.square, pieceTextures, dragState);
 
         // Present the updated frame
         SDL_RenderPresent(renderer);
@@ -117,10 +133,14 @@ void draw_chess_board(SDL_Renderer *renderer) {
 }
 
 // Render chess pieces
-void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures) {
+void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures, struct DragState &dragState) {
     for (int square = 0; square < 64; square++) {
         int piece = board[square];
         if (piece != Piece::None) {
+            if (dragState.dragging && square == dragState.fromSquare) {
+                continue;
+            }
+
             int row = square / 8;
             int col = square % 8;
             std::string pieceName = getPieceName(piece);
@@ -130,6 +150,13 @@ void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map
             SDL_RenderCopy(renderer, texture, nullptr, &destRect);
         }
     }
+
+    // Draw dragging piece
+    if (dragState.dragging && dragState.selectedPiece != Piece::None) {
+        SDL_Texture* texture = pieceTextures[getPieceName(dragState.selectedPiece)];
+        SDL_Rect destRect = {dragState.mouseX - SQUARE_SIZE / 2, dragState.mouseY - SQUARE_SIZE / 2, SQUARE_SIZE, SQUARE_SIZE};
+        SDL_RenderCopy(renderer, texture, nullptr, &destRect);
+    }
 }
 
 // Cleanup function
@@ -138,6 +165,41 @@ void cleanup(std::unordered_map<std::string, SDL_Texture*> &pieceTextures) {
         SDL_DestroyTexture(texture.second);
     }
     pieceTextures.clear();
+}
+
+void handle_mouse_input(SDL_Event event, int board[64], struct DragState &dragState) {
+    int x, y;
+    SDL_GetMouseState(&x, &y);
+    int rank = y / SQUARE_SIZE;
+    int file = x / SQUARE_SIZE;
+    int square = rank * 8 + file;
+
+    if (event.type == SDL_MOUSEBUTTONDOWN) {
+        /* std::cout << "Square pressed: " << square << std::endl; */
+        if (board[square] != Piece::None) {
+            dragState.dragging = true;
+            dragState.fromSquare = square;
+            dragState.selectedPiece = board[square];
+            dragState.mouseX = x;
+            dragState.mouseY = y;
+        }
+    }
+    else if (event.type == SDL_MOUSEMOTION && dragState.dragging) {
+        dragState.mouseX = x;
+        dragState.mouseY = y;
+        /* std::cout << "Dragging: (" << dragState.mouseX << ", " << dragState.mouseY << ")" << std::endl; */
+    }
+    else if (event.type == SDL_MOUSEBUTTONUP) {
+        /* std::cout << "Square released: " << square << std::endl; */
+        if (dragState.dragging && dragState.fromSquare != square) {
+            // Make move! (call function in move.cpp)
+            board[dragState.fromSquare] = Piece::None;
+            board[square] = dragState.selectedPiece;
+        }
+        dragState.dragging = false;
+        dragState.fromSquare = -1;
+        dragState.selectedPiece = Piece::None;
+    }
 }
 
 std::string getPieceName(int piece) {
