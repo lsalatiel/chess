@@ -6,6 +6,7 @@
 class Board {
     public:
         int squares[64];
+        bool whiteToMove;
 
         Board();
         Board(std::string fen);

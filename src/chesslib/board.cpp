@@ -6,11 +6,13 @@ void loadPositionFromFen(std::string fen, Board &board);
 Board::Board() {
     reset();
     loadPositionFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", *this);
+    whiteToMove = true;
 }
 
 Board::Board(std::string fen) {
     reset();
     loadPositionFromFen(fen, *this);
+    whiteToMove = true;
 }
 
 void Board::reset() {
@@ -23,9 +25,15 @@ void Board::make_move(int fromSquare, int toSquare, int piece) {
     if (toSquare < 0 || toSquare >= 64) {
         return;
     }
+    int pieceColor = Piece::get_piece_color(piece);
+    if ((whiteToMove && pieceColor != Piece::White) ||
+        (!whiteToMove && pieceColor != Piece::Black)) {
+        return;
+    }
     // basic move without rules
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;
+    whiteToMove = !whiteToMove;
     // PAWN
     if (Piece::get_piece_type(piece) == Piece::Pawn) {
 

@@ -10,7 +10,7 @@ bool Piece::is_color(int piece, int colour) {
     return (piece & colorMask) == colour;
 }
 
-int Piece::get_color(int piece) {
+int Piece::get_piece_color(int piece) {
     return piece & colorMask;
 }
 

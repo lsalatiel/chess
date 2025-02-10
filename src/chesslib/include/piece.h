@@ -15,7 +15,7 @@ class Piece {
         static constexpr int Black = 16;
 
         static bool is_color(int piece, int color);
-        static int get_color(int piece);
+        static int get_piece_color(int piece);
         static int get_piece_type(int piece);
         static bool is_rook_or_queen(int piece);
         static bool is_bishop_or_queen(int piece);
