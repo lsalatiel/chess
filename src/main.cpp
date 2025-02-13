@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "chesslib/include/board.h"
 #include "chesslib/include/piece.h"
+#include "chesslib/include/move.h"
 
 struct DragState {
     bool dragging = false;
@@ -89,6 +90,8 @@ int main(int argc, char **argv) {
     Board board = Board(DEFAULT_FEN);
 
     load_piece_textures(renderer, pieceFiles, pieceTextures);
+
+    Move::calculate_squares_to_edge();
 
     bool running = true;
     SDL_Event event;

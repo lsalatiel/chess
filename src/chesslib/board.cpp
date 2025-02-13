@@ -1,5 +1,6 @@
 #include "include/board.h"
 #include "include/piece.h"
+#include "include/move.h"
 
 void loadPositionFromFen(std::string fen, Board &board);
 
@@ -22,6 +23,14 @@ void Board::reset() {
 }
 
 void Board::make_move(int fromSquare, int toSquare, int piece) {
+    /* for (int i = 0; i < 64; i++) { */
+    /*     std::cout << "Squares to edge from each square: " << i << ": "; */
+    /*     for (int j : Move::squaresToEdge[i]) { */
+    /*         std::cout << j << " "; */
+    /*     } */
+    /*     std::cout << std::endl; */
+    /* } */
+
     if (toSquare < 0 || toSquare >= 64) {
         return;
     }
@@ -34,10 +43,8 @@ void Board::make_move(int fromSquare, int toSquare, int piece) {
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;
     whiteToMove = !whiteToMove;
-    // PAWN
-    if (Piece::get_piece_type(piece) == Piece::Pawn) {
 
-    }
+    // check possible moves for the square from generate_moves() and evaluate is this is a valid move
 }
 
 void loadPositionFromFen(std::string fen, Board &board) {
