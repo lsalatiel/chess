@@ -3,6 +3,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <unordered_map>
 #include "chesslib/include/board.h"
 #include "chesslib/include/piece.h"
@@ -14,19 +15,28 @@ struct DragState {
     int mouseX = 0, mouseY = 0;
 };
 
+struct SquareState {
+    bool selected = false;
+    bool highlighted = false;
+};
+
 const int WINDOW_SIZE = 600;
 const int BOARD_SIZE = 8;
 const int SQUARE_SIZE = WINDOW_SIZE / BOARD_SIZE;
+const std::string DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+const std::string EMPTY_FEN = "8/8/8/8/8/8/8/8";
 
 // Colors
 SDL_Color LIGHT = {240, 217, 181, 255};
 SDL_Color DARK = {181, 136, 99, 255};
+SDL_Color LIGHT_HIGHLIGHTED = {235, 120, 99, 255};
+SDL_Color DARK_HIGHLIGHTED = {224, 104, 83, 255};
 
 void cleanup(std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
 void load_piece_textures(SDL_Renderer* renderer, std::unordered_map<std::string, std::string> &pieceFiles, std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
-void draw_chess_board(SDL_Renderer *renderer);
-void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures, struct DragState &dragState);
-void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragState);
+void draw_chess_board(SDL_Renderer *renderer, struct SquareState (&squareState)[64]);
+void draw_chess_pieces(SDL_Renderer* renderer, int (&board)[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures, struct DragState &dragState, TTF_Font* font);
+void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragState, struct SquareState (&squareState)[64]);
 std::string get_piece_name(int piece);
 
 int main(int argc, char **argv) {
@@ -51,6 +61,19 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    TTF_Font *font = nullptr;
+
+    if (TTF_Init() == -1) {
+        std::cerr << "SDL_ttf could not initialize! TTF_Error: " << TTF_GetError() << std::endl;
+        return -1;
+    }
+
+    font = TTF_OpenFont("/usr/share/fonts/TTF/SauceCodeProNerdFont-Regular.ttf", 24);
+    if (!font) {
+        std::cerr << "Failed to load font! TTF_Error: " << TTF_GetError() << std::endl;
+        return -1;
+    }   
+
     // Piece file names
     std::unordered_map<std::string, std::string> pieceFiles = {
         {"wK", "imgs/wK.svg"}, {"wQ", "imgs/wQ.svg"}, {"wR", "imgs/wR.svg"},
@@ -63,7 +86,7 @@ int main(int argc, char **argv) {
     std::unordered_map<std::string, SDL_Texture*> pieceTextures;
 
     // Initial board setup (FEN-like)
-    Board board = Board();
+    Board board = Board(DEFAULT_FEN);
 
     load_piece_textures(renderer, pieceFiles, pieceTextures);
 
@@ -71,6 +94,7 @@ int main(int argc, char **argv) {
     SDL_Event event;
 
     struct DragState dragState;
+    struct SquareState squareState[64];
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -78,8 +102,8 @@ int main(int argc, char **argv) {
                 running = false;
             }
             else if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
-                    event.type == SDL_MOUSEMOTION) && event.button.button == SDL_BUTTON_LEFT) {
-                handle_mouse_input(event, board, dragState);
+                    event.type == SDL_MOUSEMOTION)) {
+                handle_mouse_input(event, board, dragState, squareState);
             }
         }
 
@@ -87,14 +111,16 @@ int main(int argc, char **argv) {
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
         SDL_RenderClear(renderer);
 
-        draw_chess_board(renderer);
-        draw_chess_pieces(renderer, board.squares, pieceTextures, dragState);
+        draw_chess_board(renderer, squareState);
+        draw_chess_pieces(renderer, board.squares, pieceTextures, dragState, font);
 
         // Present the updated frame
         SDL_RenderPresent(renderer);
     }
 
     cleanup(pieceTextures);
+    TTF_CloseFont(font);
+    TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -115,16 +141,23 @@ void load_piece_textures(SDL_Renderer* renderer, std::unordered_map<std::string,
     }
 }
 
-void draw_chess_board(SDL_Renderer *renderer) {
+void draw_chess_board(SDL_Renderer *renderer, struct SquareState (&squareState)[64]) {
     for (int rank = 0; rank < BOARD_SIZE; rank++) {
         for (int file = 0; file < BOARD_SIZE; file++) {
             SDL_Rect square = {file * SQUARE_SIZE, rank * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE};
 
             // Alternate colors
             if ((rank + file) % 2 == 0) {
-                SDL_SetRenderDrawColor(renderer, LIGHT.r, LIGHT.g, LIGHT.b, LIGHT.a);
-            } else {
-                SDL_SetRenderDrawColor(renderer, DARK.r, DARK.g, DARK.b, DARK.a);
+                if (squareState[rank * 8 + file].highlighted)
+                    SDL_SetRenderDrawColor(renderer, LIGHT_HIGHLIGHTED.r, LIGHT_HIGHLIGHTED.g, LIGHT_HIGHLIGHTED.b, LIGHT_HIGHLIGHTED.a);
+                else
+                    SDL_SetRenderDrawColor(renderer, LIGHT.r, LIGHT.g, LIGHT.b, LIGHT.a);
+            }
+            else {
+                if (squareState[rank * 8 + file].highlighted)
+                    SDL_SetRenderDrawColor(renderer, DARK_HIGHLIGHTED.r, DARK_HIGHLIGHTED.g, DARK_HIGHLIGHTED.b, DARK_HIGHLIGHTED.a);
+                else
+                    SDL_SetRenderDrawColor(renderer, DARK.r, DARK.g, DARK.b, DARK.a);
             }
 
             SDL_RenderFillRect(renderer, &square);
@@ -133,24 +166,40 @@ void draw_chess_board(SDL_Renderer *renderer) {
 }
 
 // Render chess pieces
-void draw_chess_pieces(SDL_Renderer* renderer, int board[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures, struct DragState &dragState) {
+void draw_chess_pieces(SDL_Renderer* renderer, int (&board)[64], std::unordered_map<std::string, SDL_Texture*> &pieceTextures, struct DragState &dragState, TTF_Font* font) {
+#ifdef DEBUG
+    SDL_Color textColor = {0, 0, 0}; // Black color for text
+#endif
+
     for (int square = 0; square < 64; square++) {
         int piece = board[square];
+        int rank = square / 8;
+        int file = square % 8;
+
+        // Draw the piece if it exists
         if (piece != Piece::None) {
             if (dragState.dragging && square == dragState.fromSquare) {
                 continue;
             }
 
-            int rank = square / 8;
-            int file = square % 8;
             std::string pieceName = get_piece_name(piece);
-
             SDL_Texture* texture = pieceTextures[pieceName];
             SDL_Rect destRect = {file * SQUARE_SIZE, rank * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE};
             SDL_RenderCopy(renderer, texture, nullptr, &destRect);
         }
-    }
 
+#ifdef DEBUG
+        // Render square index as text
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, std::to_string(square).c_str(), textColor);
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+        SDL_Rect textRect = {file * SQUARE_SIZE, rank * SQUARE_SIZE, 20, 20}; // Position text slightly inside the square
+        SDL_RenderCopy(renderer, textTexture, nullptr, &textRect);
+
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
+#endif
+    }
     // Draw dragging piece
     if (dragState.dragging && dragState.selectedPiece != Piece::None) {
         SDL_Texture* texture = pieceTextures[get_piece_name(dragState.selectedPiece)];
@@ -167,7 +216,7 @@ void cleanup(std::unordered_map<std::string, SDL_Texture*> &pieceTextures) {
     pieceTextures.clear();
 }
 
-void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragState) {
+void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragState, struct SquareState (&squareState)[64]) {
     int x, y;
     SDL_GetMouseState(&x, &y);
 
@@ -178,7 +227,7 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
     int file = x / SQUARE_SIZE;
     int square = rank * 8 + file;
 
-    if (event.type == SDL_MOUSEBUTTONDOWN) {
+    if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
         if (board.squares[square] != Piece::None) {
             dragState.dragging = true;
             dragState.fromSquare = square;
@@ -191,13 +240,16 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         dragState.mouseX = x;
         dragState.mouseY = y;
     }
-    else if (event.type == SDL_MOUSEBUTTONUP) {
+    else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
         if (dragState.dragging && dragState.fromSquare != square) {
             board.make_move(dragState.fromSquare, square, dragState.selectedPiece);
         }
         dragState.dragging = false;
         dragState.fromSquare = -1;
         dragState.selectedPiece = Piece::None;
+    }
+    else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_RIGHT) {
+        squareState[square].highlighted = !squareState[square].highlighted;
     }
 }
 
