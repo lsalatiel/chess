@@ -34,10 +34,6 @@ bool Board::make_move(int fromSquare, int toSquare, int piece) {
     if (std::find(moves.begin(), moves.end(), toSquare) == moves.end())
         return false;
 
-    for (auto move : moves) {
-        std::cout << move << " ";
-    }
-
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;
     if (colorToMove == Piece::White)

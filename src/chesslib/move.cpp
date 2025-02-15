@@ -60,7 +60,7 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
     }
 
     int movingDirectionIndex = pieceColor == Piece::White ? 0 : 1;
-    int capturingDirectionIndex = pieceColor == Piece::White ? 4 : 7;
+    int capturingDirectionIndexArray[2] = { pieceColor == Piece::White ? 4 : 7, pieceColor == Piece::White ? 5 : 6 };
     
     if (Move::squaresToEdge[fromSquare][movingDirectionIndex] > 0) {
         int toSquare = fromSquare + Move::directionsOffsets[movingDirectionIndex];
@@ -75,7 +75,14 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
         }
     }
 
-    // capturing
+    // missing en passant && promotion
+    for (int directionIndex : capturingDirectionIndexArray) {
+        int toSquare = fromSquare + Move::directionsOffsets[directionIndex];
+        if (board.squares[toSquare] != Piece::None &&
+                Piece::get_piece_color(board.squares[toSquare]) != pieceColor) {
+            moves.push_back(toSquare);
+        }
+    }
 }
 
 void Move::generate_knight_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
