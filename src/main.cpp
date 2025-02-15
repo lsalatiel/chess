@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
     load_piece_textures(renderer, pieceFiles, pieceTextures);
 
     Move::calculate_squares_to_edge();
+    Move::generate_moves(board);
 
     bool running = true;
     SDL_Event event;
@@ -245,7 +246,8 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
     }
     else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
         if (dragState.dragging && dragState.fromSquare != square) {
-            board.make_move(dragState.fromSquare, square, dragState.selectedPiece);
+            if (board.make_move(dragState.fromSquare, square, dragState.selectedPiece))
+                Move::generate_moves(board);
         }
         dragState.dragging = false;
         dragState.fromSquare = -1;

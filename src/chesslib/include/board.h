@@ -6,12 +6,12 @@
 class Board {
     public:
         int squares[64];
-        bool whiteToMove;
+        int colorToMove;
 
         Board();
         Board(std::string fen);
         void reset();
-        void make_move(int fromSquare, int toSquare, int piece);
+        bool make_move(int fromSquare, int toSquare, int piece);
 };
 
 #endif

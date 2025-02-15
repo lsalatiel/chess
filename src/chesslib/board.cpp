@@ -1,19 +1,22 @@
 #include "include/board.h"
 #include "include/piece.h"
 #include "include/move.h"
+#include <algorithm>
 
-void loadPositionFromFen(std::string fen, Board &board);
+const std::string DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+void load_position_from_fen(std::string fen, Board &board);
 
 Board::Board() {
     reset();
-    loadPositionFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", *this);
-    whiteToMove = true;
+    load_position_from_fen(DEFAULT_FEN, *this);
+    colorToMove = 8;
 }
 
 Board::Board(std::string fen) {
     reset();
-    loadPositionFromFen(fen, *this);
-    whiteToMove = true;
+    load_position_from_fen(fen, *this);
+    colorToMove = 8;
 }
 
 void Board::reset() {
@@ -22,32 +25,32 @@ void Board::reset() {
     }
 }
 
-void Board::make_move(int fromSquare, int toSquare, int piece) {
-    /* for (int i = 0; i < 64; i++) { */
-    /*     std::cout << "Squares to edge from each square: " << i << ": "; */
-    /*     for (int j : Move::squaresToEdge[i]) { */
-    /*         std::cout << j << " "; */
-    /*     } */
-    /*     std::cout << std::endl; */
-    /* } */
+bool Board::make_move(int fromSquare, int toSquare, int piece) {
+    if (toSquare < 0 || toSquare >= 64 || Piece::get_piece_color(piece) != colorToMove)
+        return false;
+    
+    std::list<int> moves = Move::get_moves_for_square(fromSquare);
 
-    if (toSquare < 0 || toSquare >= 64) {
-        return;
+    if (std::find(moves.begin(), moves.end(), toSquare) == moves.end())
+        return false;
+
+    for (auto move : moves) {
+        std::cout << move << " ";
     }
-    int pieceColor = Piece::get_piece_color(piece);
-    if ((whiteToMove && pieceColor != Piece::White) ||
-        (!whiteToMove && pieceColor != Piece::Black)) {
-        return;
-    }
-    // basic move without rules
+
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;
-    whiteToMove = !whiteToMove;
+    if (colorToMove == Piece::White)
+        colorToMove = Piece::Black;
+    else
+        colorToMove = Piece::White;
 
     // check possible moves for the square from generate_moves() and evaluate is this is a valid move
+
+    return true;
 }
 
-void loadPositionFromFen(std::string fen, Board &board) {
+void load_position_from_fen(std::string fen, Board &board) {
     // starting on top left
     int file = 0;
     int rank = 0;
