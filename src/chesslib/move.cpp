@@ -2,7 +2,7 @@
 #include <iostream>
 
 int Move::squaresToEdge[64][8];
-std::unordered_map<int, std::list<int>> Move::moves;
+std::unordered_map<int, std::list<int>> Move::possibleMoves;
 
 void Move::calculate_squares_to_edge() {
     for (int file = 0; file < 8; file++) {
@@ -32,10 +32,12 @@ void Move::calculate_squares_to_edge() {
 }
 
 std::list<int> Move::get_moves_for_square(int fromSquare) {
-    return Move::moves[fromSquare];
+    return Move::possibleMoves[fromSquare];
 }
 
 void Move::generate_moves(Board &board) {
+    Move::possibleMoves.clear();
+
     for (int fromSquare = 0; fromSquare < 64; fromSquare++) {
         int piece = board.squares[fromSquare];
         int pieceColor = Piece::get_piece_color(piece);
@@ -44,9 +46,10 @@ void Move::generate_moves(Board &board) {
         }
 
         int pieceType = Piece::get_piece_type(piece);
-        if (pieceType == Piece::Pawn) {
-            Move::generate_pawn_moves(board, piece, fromSquare, Move::moves[fromSquare]);
-        }
+        if (pieceType == Piece::Pawn)
+            Move::generate_pawn_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+        else if (pieceType == Piece::King)
+            Move::generate_king_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
     }
 }
 
@@ -75,11 +78,14 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
         }
     }
 
-    // missing en passant && promotion
+    // missing en passant
     for (int directionIndex : capturingDirectionIndexArray) {
+        if (Move::squaresToEdge[fromSquare][directionIndex] == 0)
+            continue;
+
         int toSquare = fromSquare + Move::directionsOffsets[directionIndex];
         if (board.squares[toSquare] != Piece::None &&
-                Piece::get_piece_color(board.squares[toSquare]) != pieceColor) {
+            Piece::get_piece_color(board.squares[toSquare]) != pieceColor) {
             moves.push_back(toSquare);
         }
     }
@@ -90,7 +96,15 @@ void Move::generate_knight_moves(Board &board, int piece, int fromSquare, std::l
 }
 
 void Move::generate_king_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
+    for (int i = 0; i < 8; i++) {
+        if (Move::squaresToEdge[fromSquare][i] == 0)
+            continue;
 
+        int toSquare = fromSquare + Move::directionsOffsets[i];
+        if (board.squares[toSquare] == Piece::None ||
+            Piece::get_piece_color(board.squares[toSquare] != Piece::get_piece_color(piece)))
+            moves.push_back(fromSquare + Move::directionsOffsets[i]);
+    }
 }
 
 void Move::generate_sliding_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
