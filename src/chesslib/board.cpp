@@ -37,8 +37,8 @@ bool Board::make_move(int fromSquare, int toSquare, int piece) {
     if (Piece::get_piece_type(piece) == Piece::Pawn && (toSquare < 8 || toSquare >= 56))
         piece = Piece::Queen | Piece::get_piece_color(piece);
 
-    for (auto move : moves) { std::cout << move << " "; }
-    std::cout << std::endl;
+    /* for (auto move : moves) { std::cout << move << " "; } */
+    /* std::cout << std::endl; */
 
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;

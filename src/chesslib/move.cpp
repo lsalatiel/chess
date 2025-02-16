@@ -102,7 +102,7 @@ void Move::generate_king_moves(Board &board, int piece, int fromSquare, std::lis
 
         int toSquare = fromSquare + Move::directionsOffsets[i];
         if (board.squares[toSquare] == Piece::None ||
-            Piece::get_piece_color(board.squares[toSquare] != Piece::get_piece_color(piece)))
+            Piece::get_piece_color(board.squares[toSquare]) != Piece::get_piece_color(piece))
             moves.push_back(fromSquare + Move::directionsOffsets[i]);
     }
 }
