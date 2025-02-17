@@ -238,6 +238,9 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
             dragState.selectedPiece = board.squares[square];
             dragState.mouseX = x;
             dragState.mouseY = y;
+            for (auto square : Move::possibleMoves[square]) {
+                squareState[square].highlighted = true;
+            }
         }
     }
     else if (event.type == SDL_MOUSEMOTION && dragState.dragging) {
@@ -252,6 +255,9 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         dragState.dragging = false;
         dragState.fromSquare = -1;
         dragState.selectedPiece = Piece::None;
+        for (int i = 0; i < 64; i++) {
+            squareState[i].highlighted = false;
+        }
     }
     else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_RIGHT) {
         squareState[square].highlighted = !squareState[square].highlighted;

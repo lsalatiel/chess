@@ -52,6 +52,8 @@ void Move::generate_moves(Board &board) {
             Move::generate_king_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
         else if (pieceType == Piece::Knight)
             Move::generate_knight_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+        else if (Piece::is_sliding_piece(piece))
+            Move::generate_sliding_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
     }
 }
 
@@ -123,8 +125,27 @@ void Move::generate_king_moves(Board &board, int piece, int fromSquare, std::lis
             Piece::get_piece_color(board.squares[toSquare]) != Piece::get_piece_color(piece))
             moves.push_back(fromSquare + Move::directionsOffsets[i]);
     }
+
+    // missing castle
 }
 
 void Move::generate_sliding_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
+    int startDirectionIndex = Piece::get_piece_type(piece) == Piece::Bishop ? 4 : 0;
+    int endDirectionIndex = Piece::get_piece_type(piece) == Piece::Rook ? 4 : 8;
 
+    for (int directionIndex = startDirectionIndex; directionIndex < endDirectionIndex; directionIndex++) {
+        for (int i = 0; i < Move::squaresToEdge[fromSquare][directionIndex]; i++) {
+            int toSquare = fromSquare + Move::directionsOffsets[directionIndex] * (i + 1);
+            int pieceOnToSquare = board.squares[toSquare];
+            int pieceColor = Piece::get_piece_color(piece);
+
+            if (Piece::is_color(pieceOnToSquare, pieceColor))
+                break;
+
+            moves.push_back(toSquare);
+
+            if (pieceOnToSquare != Piece::None && !Piece::is_color(pieceOnToSquare, pieceColor))
+                break;
+        }
+    }
 }
