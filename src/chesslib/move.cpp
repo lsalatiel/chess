@@ -50,6 +50,8 @@ void Move::generate_moves(Board &board) {
             Move::generate_pawn_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
         else if (pieceType == Piece::King)
             Move::generate_king_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+        else if (pieceType == Piece::Knight)
+            Move::generate_knight_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
     }
 }
 
@@ -92,7 +94,23 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
 }
 
 void Move::generate_knight_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
-
+    for (int i = 0; i < 4; i++) {
+        if (Move::squaresToEdge[fromSquare][i] < 2)
+            continue;
+        int auxSquare = fromSquare + 2 * Move::directionsOffsets[i];
+        int directionsIndex[2];
+        if (i == 0 || i == 1) { directionsIndex[0] = 2; directionsIndex[1] = 3; }
+        else { directionsIndex[0] = 0; directionsIndex[1] = 1; }
+        
+        for (int j = 0; j < 2; j++) {
+            if (Move::squaresToEdge[auxSquare][directionsIndex[j]] == 0)
+                continue;
+            int toSquare = auxSquare + Move::directionsOffsets[directionsIndex[j]];
+            if (board.squares[toSquare] == Piece::None ||
+                Piece::get_piece_color(board.squares[toSquare]) != Piece::get_piece_color(piece))
+                moves.push_back(toSquare);
+        }
+    }
 }
 
 void Move::generate_king_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
