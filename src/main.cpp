@@ -17,8 +17,9 @@ struct DragState {
 };
 
 struct SquareState {
-    bool selected = false;
+    /* bool selected = false; */
     bool highlighted = false;
+    bool played = false;
 };
 
 const int WINDOW_SIZE = 600;
@@ -32,6 +33,8 @@ SDL_Color LIGHT = {240, 217, 181, 255};
 SDL_Color DARK = {181, 136, 99, 255};
 SDL_Color LIGHT_HIGHLIGHTED = {235, 120, 99, 255};
 SDL_Color DARK_HIGHLIGHTED = {224, 104, 83, 255};
+SDL_Color LIGHT_PLAYED = {246, 234, 113, 255};
+SDL_Color DARK_PLAYED = {219, 195, 74, 255};
 
 void cleanup(std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
 void load_piece_textures(SDL_Renderer* renderer, std::unordered_map<std::string, std::string> &pieceFiles, std::unordered_map<std::string, SDL_Texture*> &pieceTextures);
@@ -154,12 +157,16 @@ void draw_chess_board(SDL_Renderer *renderer, struct SquareState (&squareState)[
             if ((rank + file) % 2 == 0) {
                 if (squareState[rank * 8 + file].highlighted)
                     SDL_SetRenderDrawColor(renderer, LIGHT_HIGHLIGHTED.r, LIGHT_HIGHLIGHTED.g, LIGHT_HIGHLIGHTED.b, LIGHT_HIGHLIGHTED.a);
+                else if (squareState[rank * 8 + file].played)
+                    SDL_SetRenderDrawColor(renderer, LIGHT_PLAYED.r, LIGHT_PLAYED.g, LIGHT_PLAYED.b, LIGHT_PLAYED.a);
                 else
                     SDL_SetRenderDrawColor(renderer, LIGHT.r, LIGHT.g, LIGHT.b, LIGHT.a);
             }
             else {
                 if (squareState[rank * 8 + file].highlighted)
                     SDL_SetRenderDrawColor(renderer, DARK_HIGHLIGHTED.r, DARK_HIGHLIGHTED.g, DARK_HIGHLIGHTED.b, DARK_HIGHLIGHTED.a);
+                else if (squareState[rank * 8 + file].played)
+                    SDL_SetRenderDrawColor(renderer, DARK_PLAYED.r, DARK_PLAYED.g, DARK_PLAYED.b, DARK_PLAYED.a);
                 else
                     SDL_SetRenderDrawColor(renderer, DARK.r, DARK.g, DARK.b, DARK.a);
             }
@@ -251,9 +258,18 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         int result;
         if (dragState.dragging && dragState.fromSquare != square) {
             result = board.make_move(dragState.fromSquare, square, dragState.selectedPiece);
-            if (result == 1)
+            if (result == 1) {
                 Move::generate_moves(board);
+                squareState[dragState.fromSquare].played = true;
+                squareState[square].played = true;
+            }
         }
+
+        for (int i = 0; i < 64; i++) {
+            if (squareState[i].played && i != square && i != dragState.fromSquare)
+                squareState[i].played = false;
+        }
+
         dragState.dragging = false;
         dragState.fromSquare = -1;
         dragState.selectedPiece = Piece::None;
