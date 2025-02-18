@@ -15,6 +15,13 @@ class Move {
         static constexpr int directionsOffsets[8] = { -8, 8, 1, -1, -7, -9, 9, 7 }; // -8: N, 8: S, 1: E, -1: W
         static std::unordered_map<int, std::list<int>> possibleMoves; // key: fromSquare, value: list of toSquares
 
+        static constexpr int whiteIndex = 0;
+        static constexpr int blackIndex = 1;
+        static bool kingHasMoved[2];
+        static bool rookShortCastleHasMoved[2];
+        static bool rookLongCastleHasMoved[2];
+        static int moveCount;
+
         static void calculate_squares_to_edge();
 
         // GENERATE POSSIBLE EVERY POSSIBLE MOVE FOR EACH PIECE IN A TURN! (just the turns color)

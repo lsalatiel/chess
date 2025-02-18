@@ -11,7 +11,8 @@ class Board {
         Board();
         Board(std::string fen);
         void reset();
-        bool make_move(int fromSquare, int toSquare, int piece);
+        // 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw
+        int make_move(int fromSquare, int toSquare, int piece);
 };
 
 #endif

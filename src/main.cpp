@@ -248,8 +248,10 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         dragState.mouseY = y;
     }
     else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+        int result;
         if (dragState.dragging && dragState.fromSquare != square) {
-            if (board.make_move(dragState.fromSquare, square, dragState.selectedPiece))
+            result = board.make_move(dragState.fromSquare, square, dragState.selectedPiece);
+            if (result == 1)
                 Move::generate_moves(board);
         }
         dragState.dragging = false;
@@ -258,6 +260,10 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         for (int i = 0; i < 64; i++) {
             squareState[i].highlighted = false;
         }
+
+        if (result == 2) { } // white wins
+        if (result == 3) { } // black wins
+        if (result == 4) { } // draw
     }
     else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_RIGHT) {
         squareState[square].highlighted = !squareState[square].highlighted;

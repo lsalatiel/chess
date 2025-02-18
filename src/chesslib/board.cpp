@@ -10,7 +10,13 @@ void load_position_from_fen(std::string fen, Board &board);
 Board::Board() {
     reset();
     load_position_from_fen(DEFAULT_FEN, *this);
-    colorToMove = 8;
+    colorToMove = Piece::White;
+    for (int i = 0; i < 2; i++) {
+        Move::kingHasMoved[i] = false;
+        Move::rookShortCastleHasMoved[i] = false;
+        Move::rookLongCastleHasMoved[i] = false;
+    }
+    Move::moveCount = 0;
 }
 
 Board::Board(std::string fen) {
@@ -25,17 +31,52 @@ void Board::reset() {
     }
 }
 
-bool Board::make_move(int fromSquare, int toSquare, int piece) {
+// 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw
+int Board::make_move(int fromSquare, int toSquare, int piece) {
     if (toSquare < 0 || toSquare >= 64 || Piece::get_piece_color(piece) != colorToMove)
         return false;
+    int pieceColor = colorToMove;
     
     std::list<int> moves = Move::get_moves_for_square(fromSquare);
 
     if (std::find(moves.begin(), moves.end(), toSquare) == moves.end())
         return false;
 
+    // handling promotion
     if (Piece::get_piece_type(piece) == Piece::Pawn && (toSquare < 8 || toSquare >= 56))
-        piece = Piece::Queen | Piece::get_piece_color(piece);
+        piece = Piece::Queen | pieceColor;
+
+    // handling castle
+    if (Piece::get_piece_type(piece) == Piece::King) {
+        if (toSquare - fromSquare == 2) {
+            squares[toSquare - 1] = squares[toSquare + 1];
+            squares[toSquare + 1] = Piece::None;
+        }
+        else if (fromSquare - toSquare == 2) {
+            squares[toSquare + 1] = squares[toSquare - 2];
+            squares[toSquare - 2] = Piece::None;
+        }
+
+        if (pieceColor == Piece::White)
+            Move::kingHasMoved[Move::whiteIndex] = true;
+        else
+            Move::kingHasMoved[Move::blackIndex] = true;
+    }
+    if (Piece::get_piece_type(piece) == Piece::Rook) {
+        if (fromSquare == 0)
+            Move::rookLongCastleHasMoved[Move::blackIndex] = true;
+        else if (fromSquare == 7)
+            Move::rookShortCastleHasMoved[Move::blackIndex] = true;
+        else if (fromSquare == 56)
+            Move::rookLongCastleHasMoved[Move::whiteIndex] = true;
+        else if (fromSquare == 63)
+            Move::rookShortCastleHasMoved[Move::whiteIndex] = true;
+    }
+
+    if (squares[fromSquare] != Piece::None)
+        Move::moveCount++;
+    else
+        Move::moveCount = 0;
 
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;
@@ -43,6 +84,9 @@ bool Board::make_move(int fromSquare, int toSquare, int piece) {
         colorToMove = Piece::Black;
     else
         colorToMove = Piece::White;
+
+    if (Move::moveCount == 50)
+        return 4;
 
     return true;
 }

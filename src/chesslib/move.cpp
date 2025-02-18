@@ -3,6 +3,10 @@
 
 int Move::squaresToEdge[64][8];
 std::unordered_map<int, std::list<int>> Move::possibleMoves;
+bool Move::kingHasMoved[2];
+bool Move::rookShortCastleHasMoved[2];
+bool Move::rookLongCastleHasMoved[2];
+int Move::moveCount;
 
 void Move::calculate_squares_to_edge() {
     for (int file = 0; file < 8; file++) {
@@ -125,8 +129,31 @@ void Move::generate_king_moves(Board &board, int piece, int fromSquare, std::lis
             Piece::get_piece_color(board.squares[toSquare]) != Piece::get_piece_color(piece))
             moves.push_back(fromSquare + Move::directionsOffsets[i]);
     }
-
-    // missing castle
+    
+    // castling
+    int colorIndex = Piece::get_piece_color(piece) == Piece::White ? Move::whiteIndex : Move::blackIndex;
+    if (!Move::kingHasMoved[colorIndex]) {
+        if (!Move::rookShortCastleHasMoved[colorIndex]) {
+            bool canCastle = true;
+            for (int i = 1; i < 3; i++) {
+                if (board.squares[fromSquare + i] != Piece::None)
+                    canCastle = false;
+            }
+            if (canCastle) {
+                moves.push_back(fromSquare + 2);
+            }
+        }
+        if (!Move::rookLongCastleHasMoved[colorIndex]) {
+            bool canCastle = true;
+            for (int i = 1; i < 4; i++) {
+                if (board.squares[fromSquare - i] != Piece::None)
+                    canCastle = false;
+            }
+            if (canCastle) {
+                moves.push_back(fromSquare - 2);
+            }
+        }
+    }
 }
 
 void Move::generate_sliding_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
