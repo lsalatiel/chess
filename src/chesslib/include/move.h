@@ -20,6 +20,7 @@ class Move {
         static bool kingHasMoved[2];
         static bool rookShortCastleHasMoved[2];
         static bool rookLongCastleHasMoved[2];
+        static bool enPasssant;
         static int moveCount;
 
         static void calculate_squares_to_edge();

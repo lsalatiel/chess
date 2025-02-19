@@ -9,6 +9,8 @@
 #include "chesslib/include/piece.h"
 #include "chesslib/include/move.h"
 
+#define DEBUG
+
 struct DragState {
     bool dragging = false;
     int selectedPiece = Piece::None;
@@ -16,11 +18,11 @@ struct DragState {
     int mouseX = 0, mouseY = 0;
 };
 
-struct SquareState {
-    /* bool selected = false; */
-    bool highlighted = false;
-    bool played = false;
-};
+/* struct SquareState { */
+/*     bool selected = false; */
+/*     bool highlighted = false; */
+/*     bool played = false; */
+/* }; */
 
 const int WINDOW_SIZE = 600;
 const int BOARD_SIZE = 8;
@@ -101,7 +103,6 @@ int main(int argc, char **argv) {
     SDL_Event event;
 
     struct DragState dragState;
-    struct SquareState squareState[64];
 
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -110,7 +111,7 @@ int main(int argc, char **argv) {
             }
             else if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
                     event.type == SDL_MOUSEMOTION)) {
-                handle_mouse_input(event, board, dragState, squareState);
+                handle_mouse_input(event, board, dragState, board.squareState);
             }
         }
 
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
         SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
         SDL_RenderClear(renderer);
 
-        draw_chess_board(renderer, squareState);
+        draw_chess_board(renderer, board.squareState);
         draw_chess_pieces(renderer, board.squares, pieceTextures, dragState, font);
 
         // Present the updated frame
@@ -258,16 +259,8 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         int result;
         if (dragState.dragging && dragState.fromSquare != square) {
             result = board.make_move(dragState.fromSquare, square, dragState.selectedPiece);
-            if (result == 1) {
+            if (result == 1)
                 Move::generate_moves(board);
-                squareState[dragState.fromSquare].played = true;
-                squareState[square].played = true;
-            }
-        }
-
-        for (int i = 0; i < 64; i++) {
-            if (squareState[i].played && i != square && i != dragState.fromSquare)
-                squareState[i].played = false;
         }
 
         dragState.dragging = false;

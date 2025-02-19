@@ -3,10 +3,11 @@
 
 int Move::squaresToEdge[64][8];
 std::unordered_map<int, std::list<int>> Move::possibleMoves;
-bool Move::kingHasMoved[2];
-bool Move::rookShortCastleHasMoved[2];
-bool Move::rookLongCastleHasMoved[2];
-int Move::moveCount;
+bool Move::kingHasMoved[2] = {false, false};
+bool Move::rookShortCastleHasMoved[2] = {false, false};
+bool Move::rookLongCastleHasMoved[2] = {false, false};
+bool Move::enPasssant = false;
+int Move::moveCount = 0;
 
 void Move::calculate_squares_to_edge() {
     for (int file = 0; file < 8; file++) {
@@ -92,9 +93,15 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
             continue;
 
         int toSquare = fromSquare + Move::directionsOffsets[directionIndex];
+        int diff = board.colorToMove == Piece::White ? 8 : -8;
         if (board.squares[toSquare] != Piece::None &&
             Piece::get_piece_color(board.squares[toSquare]) != pieceColor) {
             moves.push_back(toSquare);
+        }
+        else if (Piece::get_piece_type(board.squares[toSquare + diff]) == Piece::Pawn &&
+                board.squareState[toSquare + 8].played && board.squareState[toSquare - 8].played) {
+            moves.push_back(toSquare);
+            Move::enPasssant = true;
         }
     }
 }

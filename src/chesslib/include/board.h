@@ -3,10 +3,17 @@
 
 #include <iostream>
 
+struct SquareState {
+    /* bool selected = false; */
+    bool highlighted = false;
+    bool played = false;
+};
+
 class Board {
     public:
         int squares[64];
         int colorToMove;
+        struct SquareState squareState[64];
 
         Board();
         Board(std::string fen);

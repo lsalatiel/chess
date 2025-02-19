@@ -11,12 +11,6 @@ Board::Board() {
     reset();
     load_position_from_fen(DEFAULT_FEN, *this);
     colorToMove = Piece::White;
-    for (int i = 0; i < 2; i++) {
-        Move::kingHasMoved[i] = false;
-        Move::rookShortCastleHasMoved[i] = false;
-        Move::rookLongCastleHasMoved[i] = false;
-    }
-    Move::moveCount = 0;
 }
 
 Board::Board(std::string fen) {
@@ -78,15 +72,30 @@ int Board::make_move(int fromSquare, int toSquare, int piece) {
     else
         Move::moveCount = 0;
 
+    if (Move::enPasssant) {
+        int diff = colorToMove == Piece::White ? 8 : -8;
+        squares[toSquare + diff] = Piece::None;
+        Move::enPasssant = false;
+    }
+
     squares[toSquare] = piece;
     squares[fromSquare] = Piece::None;
+    
     if (colorToMove == Piece::White)
         colorToMove = Piece::Black;
     else
         colorToMove = Piece::White;
 
-    if (Move::moveCount == 50)
-        return 4;
+    squareState[fromSquare].played = true;
+    squareState[toSquare].played = true;
+
+    for (int i = 0; i < 64; i++) {
+        if (squareState[i].played && i != toSquare && i != fromSquare)
+            squareState[i].played = false;
+    }
+
+    /* if (Move::moveCount == 50) */
+    /*     return 4; */
 
     return true;
 }
