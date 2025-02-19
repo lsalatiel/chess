@@ -9,20 +9,12 @@
 #include "chesslib/include/piece.h"
 #include "chesslib/include/move.h"
 
-#define DEBUG
-
 struct DragState {
     bool dragging = false;
     int selectedPiece = Piece::None;
     int fromSquare = -1;
     int mouseX = 0, mouseY = 0;
 };
-
-/* struct SquareState { */
-/*     bool selected = false; */
-/*     bool highlighted = false; */
-/*     bool played = false; */
-/* }; */
 
 const int WINDOW_SIZE = 600;
 const int BOARD_SIZE = 8;

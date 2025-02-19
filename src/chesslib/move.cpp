@@ -87,7 +87,6 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
         }
     }
 
-    // missing en passant
     for (int directionIndex : capturingDirectionIndexArray) {
         if (Move::squaresToEdge[fromSquare][directionIndex] == 0)
             continue;

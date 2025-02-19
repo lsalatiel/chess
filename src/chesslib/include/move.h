@@ -9,8 +9,6 @@
 
 class Move {
     public:
-        /* int fromSquare; */
-        /* int toSquare; */
         static int squaresToEdge[64][8];
         static constexpr int directionsOffsets[8] = { -8, 8, 1, -1, -7, -9, 9, 7 }; // -8: N, 8: S, 1: E, -1: W
         static std::unordered_map<int, std::list<int>> possibleMoves; // key: fromSquare, value: list of toSquares
@@ -24,9 +22,6 @@ class Move {
         static int moveCount;
 
         static void calculate_squares_to_edge();
-
-        // GENERATE POSSIBLE EVERY POSSIBLE MOVE FOR EACH PIECE IN A TURN! (just the turns color)
-        // List<Move> generate_moves(Board &board);
         static void generate_moves(Board &board);
         static std::list<int> get_moves_for_square(int fromSquare);
 
