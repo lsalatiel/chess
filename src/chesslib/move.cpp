@@ -2,7 +2,6 @@
 #include <iostream>
 
 int Move::squaresToEdge[64][8];
-std::unordered_map<int, std::list<int>> Move::possibleMoves;
 bool Move::kingHasMoved[2] = {false, false};
 bool Move::rookShortCastleHasMoved[2] = {false, false};
 bool Move::rookLongCastleHasMoved[2] = {false, false};
@@ -40,8 +39,9 @@ std::list<int> Move::get_moves_for_square(int fromSquare) {
     return Move::possibleMoves[fromSquare];
 }
 
-void Move::generate_moves(Board &board) {
-    Move::possibleMoves.clear();
+void Move::generate_moves(Board &board, std::unordered_map<int, std::list<int>> &possibleMoves, bool handleCheck) {
+    if (handleCheck)
+        Move::possibleMoves.clear();
 
     for (int fromSquare = 0; fromSquare < 64; fromSquare++) {
         int piece = board.squares[fromSquare];
@@ -52,17 +52,20 @@ void Move::generate_moves(Board &board) {
 
         int pieceType = Piece::get_piece_type(piece);
         if (pieceType == Piece::Pawn)
-            Move::generate_pawn_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+            Move::generate_pawn_moves(board, piece, fromSquare, possibleMoves[fromSquare], true ? handleCheck : false);
         else if (pieceType == Piece::King)
-            Move::generate_king_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+            Move::generate_king_moves(board, piece, fromSquare, possibleMoves[fromSquare]);
         else if (pieceType == Piece::Knight)
-            Move::generate_knight_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+            Move::generate_knight_moves(board, piece, fromSquare, possibleMoves[fromSquare]);
         else if (Piece::is_sliding_piece(piece))
-            Move::generate_sliding_moves(board, piece, fromSquare, Move::possibleMoves[fromSquare]);
+            Move::generate_sliding_moves(board, piece, fromSquare, possibleMoves[fromSquare]);
     }
+    
+    if (handleCheck)
+        remove_illegal_moves(board, Move::possibleMoves);
 }
 
-void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::list<int> &moves) {
+void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::list<int> &moves, bool checkEnPassant) {
     int rank = fromSquare / 8;
     bool pawnTwoForward = false;
     int pieceColor = Piece::get_piece_color(piece);
@@ -100,7 +103,8 @@ void Move::generate_pawn_moves(Board &board, int piece, int fromSquare, std::lis
         else if (Piece::get_piece_type(board.squares[toSquare + diff]) == Piece::Pawn &&
                 board.squareState[toSquare + 8].played && board.squareState[toSquare - 8].played) {
             moves.push_back(toSquare);
-            Move::enPasssant = true;
+            if (checkEnPassant)
+                Move::enPasssant = true;
         }
     }
 }
@@ -179,6 +183,96 @@ void Move::generate_sliding_moves(Board &board, int piece, int fromSquare, std::
 
             if (pieceOnToSquare != Piece::None && !Piece::is_color(pieceOnToSquare, pieceColor))
                 break;
+        }
+    }
+}
+
+std::string generate_fen_from_position(int board[64]) {
+    std::string fen = "";
+    int emptyCount = 0;
+    
+    for (int i = 0; i < 64; i++) {
+        int piece = board[i];
+        if (piece == Piece::None) {
+            emptyCount++;
+        } else {
+            if (emptyCount > 0) {
+                fen += std::to_string(emptyCount);
+                emptyCount = 0;
+            }
+            char pieceChar = ' ';
+            switch (Piece::get_piece_type(piece)) {
+                case Piece::Rook: pieceChar = 'r'; break;
+                case Piece::Knight: pieceChar = 'n'; break;
+                case Piece::Bishop: pieceChar = 'b'; break;
+                case Piece::Queen: pieceChar = 'q'; break;
+                case Piece::King: pieceChar = 'k'; break;
+                case Piece::Pawn: pieceChar = 'p'; break;
+            }
+            if (Piece::get_piece_color(piece) == Piece::White) {
+                pieceChar = toupper(pieceChar);
+            }
+            fen += pieceChar;
+        }
+        if (i % 8 == 7) {
+            if (emptyCount > 0) {
+                fen += std::to_string(emptyCount);
+                emptyCount = 0;
+            }
+            if (i != 63) {
+                fen += "/";
+            }
+        }
+    }
+
+    return fen;
+}
+
+void Move::remove_illegal_moves(Board &board, std::unordered_map<int, std::list<int>> &possibleMoves) {
+    // for each possible move, simulate the move, check all opponent responses and remove it if the king can be captured
+
+    for (int fromSquare = 0; fromSquare < 64; fromSquare++) {
+        std::list<int> movesToRemove;
+        for (int toSquare : possibleMoves[fromSquare]) {
+            std::string fen = generate_fen_from_position(board.squares);
+            Board virtualBoard = Board(fen);
+            int piece = virtualBoard.squares[fromSquare];
+            virtualBoard.colorToMove = board.colorToMove;
+
+            virtualBoard.make_move(fromSquare, toSquare, piece, possibleMoves[fromSquare], true);
+            bool shortCastle = false;
+            bool longCastle = false;
+            if (Piece::get_piece_type(piece) == Piece::King && toSquare - fromSquare == 2) {
+                shortCastle = true;
+            }
+            else if (Piece::get_piece_type(piece) == Piece::King && toSquare - fromSquare == -2) {
+                longCastle = true;
+            }
+            std::unordered_map<int, std::list<int>> possibleMovesAhead;
+            generate_moves(virtualBoard, possibleMovesAhead, false);
+            bool kingCanBeCaptured = false;
+            int kingSquare = -1;
+            for (int i = 0; i < 64; i++) {
+                if (virtualBoard.squares[i] == (Piece::King | board.colorToMove)) {
+                    kingSquare = i;
+                    break;
+                }
+            }
+            for (int i = 0; i < 64; i++) {
+                for (int move : possibleMovesAhead[i]) {
+                    if (move == kingSquare || (shortCastle && move == kingSquare - 1) || (longCastle && move == kingSquare + 1)) {
+                        kingCanBeCaptured = true;
+                        break;
+                    }
+                }
+            }
+
+            if (kingCanBeCaptured) {
+                movesToRemove.push_back(toSquare);
+            }
+        }
+        for (int move : movesToRemove) {
+            possibleMoves[fromSquare].remove(move);
         }
     }
 }

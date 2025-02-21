@@ -26,12 +26,10 @@ void Board::reset() {
 }
 
 // 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw
-int Board::make_move(int fromSquare, int toSquare, int piece) {
+int Board::make_move(int fromSquare, int toSquare, int piece, std::list<int> &moves, bool simulate) {
     if (toSquare < 0 || toSquare >= 64 || Piece::get_piece_color(piece) != colorToMove)
         return false;
     int pieceColor = colorToMove;
-    
-    std::list<int> moves = Move::get_moves_for_square(fromSquare);
 
     if (std::find(moves.begin(), moves.end(), toSquare) == moves.end())
         return false;
@@ -51,12 +49,15 @@ int Board::make_move(int fromSquare, int toSquare, int piece) {
             squares[toSquare - 2] = Piece::None;
         }
 
-        if (pieceColor == Piece::White)
-            Move::kingHasMoved[Move::whiteIndex] = true;
-        else
-            Move::kingHasMoved[Move::blackIndex] = true;
+        if (!simulate) {
+            if (pieceColor == Piece::White)
+                Move::kingHasMoved[Move::whiteIndex] = true;
+            else
+                Move::kingHasMoved[Move::blackIndex] = true;
+        }
     }
-    if (Piece::get_piece_type(piece) == Piece::Rook) {
+
+    if (Piece::get_piece_type(piece) == Piece::Rook && !simulate) {
         if (fromSquare == 0)
             Move::rookLongCastleHasMoved[Move::blackIndex] = true;
         else if (fromSquare == 7)
@@ -67,15 +68,18 @@ int Board::make_move(int fromSquare, int toSquare, int piece) {
             Move::rookShortCastleHasMoved[Move::whiteIndex] = true;
     }
 
-    if (squares[fromSquare] != Piece::None)
-        Move::moveCount++;
-    else
-        Move::moveCount = 0;
+    if (!simulate) {
+        if (squares[toSquare] == Piece::None)
+            Move::moveCount++;
+        else
+            Move::moveCount = 0;
+    }
 
     if (Move::enPasssant) {
         int diff = colorToMove == Piece::White ? 8 : -8;
         squares[toSquare + diff] = Piece::None;
-        Move::enPasssant = false;
+        if (!simulate)
+            Move::enPasssant = false;
     }
 
     squares[toSquare] = piece;

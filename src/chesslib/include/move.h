@@ -22,14 +22,15 @@ class Move {
         static int moveCount;
 
         static void calculate_squares_to_edge();
-        static void generate_moves(Board &board);
+        static void generate_moves(Board &board, std::unordered_map<int, std::list<int>> &possibleMoves, bool handleCheck);
         static std::list<int> get_moves_for_square(int fromSquare);
 
     private:
-        static void generate_pawn_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
+        static void generate_pawn_moves(Board &board, int piece, int fromSquare, std::list<int> &moves, bool checkEnPassant);
         static void generate_knight_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
         static void generate_king_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
         static void generate_sliding_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
+        static void remove_illegal_moves(Board &board, std::unordered_map<int, std::list<int>> &possibleMoves);
 };
 
 #endif

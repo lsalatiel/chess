@@ -22,6 +22,8 @@ const int SQUARE_SIZE = WINDOW_SIZE / BOARD_SIZE;
 const std::string DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 const std::string EMPTY_FEN = "8/8/8/8/8/8/8/8";
 
+std::unordered_map<int, std::list<int>> Move::possibleMoves;
+
 // Colors
 SDL_Color LIGHT = {240, 217, 181, 255};
 SDL_Color DARK = {181, 136, 99, 255};
@@ -89,7 +91,7 @@ int main(int argc, char **argv) {
     load_piece_textures(renderer, pieceFiles, pieceTextures);
 
     Move::calculate_squares_to_edge();
-    Move::generate_moves(board);
+    Move::generate_moves(board, Move::possibleMoves, true);
 
     bool running = true;
     SDL_Event event;
@@ -250,9 +252,9 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
     else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
         int result;
         if (dragState.dragging && dragState.fromSquare != square) {
-            result = board.make_move(dragState.fromSquare, square, dragState.selectedPiece);
+            result = board.make_move(dragState.fromSquare, square, dragState.selectedPiece, Move::possibleMoves[dragState.fromSquare], false);
             if (result == 1)
-                Move::generate_moves(board);
+                Move::generate_moves(board, Move::possibleMoves, true);
         }
 
         dragState.dragging = false;
