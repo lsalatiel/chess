@@ -104,8 +104,24 @@ int main(int argc, char **argv) {
                 running = false;
             }
             else if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
-                    event.type == SDL_MOUSEMOTION)) {
-                handle_mouse_input(event, board, dragState, board.squareState);
+                        event.type == SDL_MOUSEMOTION)) {
+                if (!board.gameEnded) {
+                    handle_mouse_input(event, board, dragState, board.squareState);
+                } else {
+                    // Check if the reset button was clicked
+                    if (event.type == SDL_MOUSEBUTTONDOWN) {
+                        int mouseX = event.button.x;
+                        int mouseY = event.button.y;
+
+                        // Button position (adjust as needed)
+                        SDL_Rect resetButton = {200, 300, 150, 50};
+
+                        if (mouseX >= resetButton.x && mouseX <= resetButton.x + resetButton.w &&
+                                mouseY >= resetButton.y && mouseY <= resetButton.y + resetButton.h) {
+                            Board::load_position_from_fen(DEFAULT_FEN, board);  // Reset the game state
+                        }
+                    }
+                }
             }
         }
 
@@ -115,6 +131,24 @@ int main(int argc, char **argv) {
 
         draw_chess_board(renderer, board.squareState);
         draw_chess_pieces(renderer, board.squares, pieceTextures, dragState, font);
+
+        // If game ended, render the reset button
+        if (board.gameEnded) {
+            SDL_Rect resetButton = {200, 300, 150, 50}; // Button position and size
+            SDL_SetRenderDrawColor(renderer, 200, 0, 0, 255); // Red color
+            SDL_RenderFillRect(renderer, &resetButton);
+
+            // Render text (if you have an SDL_ttf font)
+            SDL_Color textColor = {255, 255, 255, 255};
+            SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Reset Game", textColor);
+            SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+
+            SDL_Rect textRect = {220, 315, textSurface->w, textSurface->h};
+            SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+
+            SDL_FreeSurface(textSurface);
+            SDL_DestroyTexture(textTexture);
+        }
 
         // Present the updated frame
         SDL_RenderPresent(renderer);

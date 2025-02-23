@@ -14,12 +14,17 @@ class Board {
     public:
         int squares[64];
         int colorToMove;
+        bool gameEnded;
+        int colorWinner;
+        bool stalemate;
         struct SquareState squareState[64];
 
         Board();
         Board(std::string fen);
         void reset();
         // 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw
+
+        static void load_position_from_fen(std::string fen, Board &board);
         int make_move(int fromSquare, int toSquare, int piece, std::list<int> &moves, bool simulate);
 };
 

@@ -28,7 +28,7 @@ class Move {
     private:
         static void generate_pawn_moves(Board &board, int piece, int fromSquare, std::list<int> &moves, bool checkEnPassant);
         static void generate_knight_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
-        static void generate_king_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
+        static void generate_king_moves(Board &board, int piece, int fromSquare, std::list<int> &moves, bool handleCheck);
         static void generate_sliding_moves(Board &board, int piece, int fromSquare, std::list<int> &moves);
         static void remove_illegal_moves(Board &board, std::unordered_map<int, std::list<int>> &possibleMoves);
 };

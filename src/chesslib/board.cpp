@@ -5,18 +5,22 @@
 
 const std::string DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
-void load_position_from_fen(std::string fen, Board &board);
-
 Board::Board() {
     reset();
     load_position_from_fen(DEFAULT_FEN, *this);
     colorToMove = Piece::White;
+    gameEnded = false;
+    colorWinner = -1;
+    stalemate = false;
 }
 
 Board::Board(std::string fen) {
     reset();
     load_position_from_fen(fen, *this);
-    colorToMove = 8;
+    colorToMove = Piece::White;
+    gameEnded = false;
+    colorWinner = -1;
+    stalemate = false;
 }
 
 void Board::reset() {
@@ -104,7 +108,7 @@ int Board::make_move(int fromSquare, int toSquare, int piece, std::list<int> &mo
     return true;
 }
 
-void load_position_from_fen(std::string fen, Board &board) {
+void Board::load_position_from_fen(std::string fen, Board &board) {
     // starting on top left
     int file = 0;
     int rank = 0;
