@@ -78,11 +78,11 @@ void Move::generate_moves(Board &board, std::unordered_map<int, std::list<int>> 
             board.gameEnded = true;
             if (is_in_check(board))
                 if (board.colorToMove == Piece::White) {
-                    board.colorWinner = Piece::White;
+                    board.colorWinner = Piece::Black;
                     std::cout << "Black wins" << std::endl;
                 }
                 else {
-                    board.colorWinner = Piece::Black;
+                    board.colorWinner = Piece::White;
                     std::cout << "White wins" << std::endl;
                 }
             else {

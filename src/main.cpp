@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
                         int mouseY = event.button.y;
 
                         // Button position (adjust as needed)
-                        SDL_Rect resetButton = {200, 300, 150, 50};
+                        SDL_Rect resetButton = {180, 260, 200, 60};
 
                         if (mouseX >= resetButton.x && mouseX <= resetButton.x + resetButton.w &&
                                 mouseY >= resetButton.y && mouseY <= resetButton.y + resetButton.h) {
@@ -140,20 +140,45 @@ int main(int argc, char **argv) {
 
         // If game ended, render the reset button
         if (board.gameEnded) {
-            SDL_Rect resetButton = {200, 300, 150, 50}; // Button position and size
-            SDL_SetRenderDrawColor(renderer, 200, 0, 0, 255); // Red color
-            SDL_RenderFillRect(renderer, &resetButton);
+            const char* message;
+            if (board.stalemate) {
+                message = "Draw!";
+            } else if (board.colorWinner == Piece::White) {
+                message = "White Wins!";
+            } else {
+                message = "Black Wins!";
+            }
 
-            // Render text (if you have an SDL_ttf font)
+            // Render text
             SDL_Color textColor = {255, 255, 255, 255};
-            SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Reset Game", textColor);
+            SDL_Surface* textSurface = TTF_RenderText_Solid(font, message, textColor);
             SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
 
-            SDL_Rect textRect = {220, 315, textSurface->w, textSurface->h};
+            SDL_Rect textRect = {160, 180, textSurface->w * 2, textSurface->h * 2};
             SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
 
             SDL_FreeSurface(textSurface);
             SDL_DestroyTexture(textTexture);
+
+            // Draw the reset button
+            SDL_Rect resetButton = {180, 260, 200, 60};
+            SDL_SetRenderDrawColor(renderer, 220, 50, 50, 255);
+            SDL_RenderFillRect(renderer, &resetButton);
+
+            // Button border
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            SDL_Rect border = {resetButton.x - 2, resetButton.y - 2, resetButton.w + 4, resetButton.h + 4};
+            SDL_RenderDrawRect(renderer, &border);
+
+            // Render "Reset Game" text
+            SDL_Surface* resetSurface = TTF_RenderText_Solid(font, "Reset Game", textColor);
+            SDL_Texture* resetTexture = SDL_CreateTextureFromSurface(renderer, resetSurface);
+
+            SDL_Rect resetTextRect = {resetButton.x + 50, resetButton.y + 15, resetSurface->w, resetSurface->h};
+            SDL_RenderCopy(renderer, resetTexture, NULL, &resetTextRect);
+
+            SDL_FreeSurface(resetSurface);
+            SDL_DestroyTexture(resetTexture);
         }
 
         // Present the updated frame
