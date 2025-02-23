@@ -77,15 +77,18 @@ void Move::generate_moves(Board &board, std::unordered_map<int, std::list<int>> 
         if (!isTherePossibleMoves) {
             board.gameEnded = true;
             if (is_in_check(board))
-                if (board.colorToMove == Piece::White)
-                    /* board.colorWinner = Piece::White; */
-                    std::cout << "White wins" << std::endl;
-                else
-                    /* board.colorWinner = Piece::Black; */
+                if (board.colorToMove == Piece::White) {
+                    board.colorWinner = Piece::White;
                     std::cout << "Black wins" << std::endl;
-            else
-                /* board.stalemate = true; */
+                }
+                else {
+                    board.colorWinner = Piece::Black;
+                    std::cout << "White wins" << std::endl;
+                }
+            else {
+                board.stalemate = true;
                 std::cout << "Stalemate" << std::endl;
+            }
         }
     }
 }

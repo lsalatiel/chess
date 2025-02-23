@@ -8,25 +8,24 @@ const std::string DEFAULT_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 Board::Board() {
     reset();
     load_position_from_fen(DEFAULT_FEN, *this);
-    colorToMove = Piece::White;
-    gameEnded = false;
-    colorWinner = -1;
-    stalemate = false;
 }
 
 Board::Board(std::string fen) {
     reset();
     load_position_from_fen(fen, *this);
-    colorToMove = Piece::White;
-    gameEnded = false;
-    colorWinner = -1;
-    stalemate = false;
 }
 
 void Board::reset() {
     for (int i = 0; i < 64; i++) {
         squares[i] = Piece::None;
+        squareState[i].played = false;
+        squareState[i].highlighted = false;
     }
+
+    colorToMove = Piece::White;
+    gameEnded = false;
+    colorWinner = -1;
+    stalemate = false;
 }
 
 // 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw

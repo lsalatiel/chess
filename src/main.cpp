@@ -91,14 +91,18 @@ int main(int argc, char **argv) {
     load_piece_textures(renderer, pieceFiles, pieceTextures);
 
     Move::calculate_squares_to_edge();
-    Move::generate_moves(board, Move::possibleMoves, true);
 
     bool running = true;
     SDL_Event event;
+    bool firstMove = true;
 
     struct DragState dragState;
 
     while (running) {
+        if (firstMove) {
+            Move::generate_moves(board, Move::possibleMoves, true);
+            firstMove = false;
+        }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
@@ -118,7 +122,9 @@ int main(int argc, char **argv) {
 
                         if (mouseX >= resetButton.x && mouseX <= resetButton.x + resetButton.w &&
                                 mouseY >= resetButton.y && mouseY <= resetButton.y + resetButton.h) {
+                            board.reset();
                             Board::load_position_from_fen(DEFAULT_FEN, board);  // Reset the game state
+                            firstMove = true;
                         }
                     }
                 }
