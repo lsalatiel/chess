@@ -1,4 +1,3 @@
-#include <list>
 #if !defined(CHESSLIB_MOVE_H)
 #define CHESSLIB_MOVE_H
 

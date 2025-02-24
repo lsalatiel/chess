@@ -1,6 +1,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_mouse.h>
 #include <iostream>
+#include <unistd.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
@@ -8,6 +9,7 @@
 #include "chesslib/include/board.h"
 #include "chesslib/include/piece.h"
 #include "chesslib/include/move.h"
+#include "enginelib/include/bot.h"
 
 struct DragState {
     bool dragging = false;
@@ -87,6 +89,7 @@ int main(int argc, char **argv) {
 
     // Initial board setup (FEN-like)
     Board board = Board(DEFAULT_FEN);
+    Bot bot = Bot(Piece::Black);
 
     load_piece_textures(renderer, pieceFiles, pieceTextures);
 
@@ -103,6 +106,10 @@ int main(int argc, char **argv) {
             Move::generate_moves(board, Move::possibleMoves, true);
             firstMove = false;
         }
+        if (board.colorToMove == bot.pieceColor) {
+            /* sleep(1); */
+            bot.make_move(board, Move::possibleMoves);
+        }
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = false;
@@ -110,7 +117,8 @@ int main(int argc, char **argv) {
             else if ((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP ||
                         event.type == SDL_MOUSEMOTION)) {
                 if (!board.gameEnded) {
-                    handle_mouse_input(event, board, dragState, board.squareState);
+                    if (board.colorToMove != bot.pieceColor)
+                        handle_mouse_input(event, board, dragState, board.squareState);
                 } else {
                     // Check if the reset button was clicked
                     if (event.type == SDL_MOUSEBUTTONDOWN) {
@@ -318,8 +326,6 @@ void handle_mouse_input(SDL_Event event, Board &board, struct DragState &dragSta
         int result;
         if (dragState.dragging && dragState.fromSquare != square) {
             result = board.make_move(dragState.fromSquare, square, dragState.selectedPiece, Move::possibleMoves[dragState.fromSquare], false);
-            if (result == 1)
-                Move::generate_moves(board, Move::possibleMoves, true);
         }
 
         dragState.dragging = false;

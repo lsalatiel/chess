@@ -3,7 +3,7 @@ CFLAGS = -Wall -g -lGL -lGLU -lglut $(shell sdl2-config --cflags --libs) -lSDL2_
 EXEC = main
 SRC_DIR = src
 OBJ_DIR = obj
-CPP = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/chesslib/*.cpp)
+CPP = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/chesslib/*.cpp) $(wildcard $(SRC_DIR)/enginelib/*.cpp)
 OBJ = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(CPP))
 CPPFLAGS = -std=c++23
 

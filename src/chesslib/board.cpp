@@ -104,7 +104,10 @@ int Board::make_move(int fromSquare, int toSquare, int piece, std::list<int> &mo
     /* if (Move::moveCount == 50) */
     /*     return 4; */
 
-    return true;
+    if (!simulate)
+        Move::generate_moves(*this, Move::possibleMoves, true);
+
+    return 1;
 }
 
 void Board::load_position_from_fen(std::string fen, Board &board) {
