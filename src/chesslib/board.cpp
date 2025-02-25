@@ -26,6 +26,8 @@ void Board::reset() {
     gameEnded = false;
     colorWinner = -1;
     stalemate = false;
+    drawByRepetition = false;
+    insufficientMaterial = false;
 }
 
 // 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw

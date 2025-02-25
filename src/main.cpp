@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
         // If game ended, render the reset button
         if (board.gameEnded) {
             const char* message;
-            if (board.stalemate) {
+            if (board.stalemate || board.insufficientMaterial || board.drawByRepetition) {
                 message = "Draw!";
             } else if (board.colorWinner == Piece::White) {
                 message = "White Wins!";

@@ -9,6 +9,7 @@ bool Move::enPasssant = false;
 int Move::moveCount = 0;
 
 int is_in_check(Board board);
+bool insufficient_material(Board &board);
 
 void Move::calculate_squares_to_edge() {
     for (int file = 0; file < 8; file++) {
@@ -65,6 +66,13 @@ void Move::generate_moves(Board &board, std::unordered_map<int, std::list<int>> 
     
     if (handleCheck) {
         remove_illegal_moves(board, Move::possibleMoves);
+
+        if (insufficient_material(board)) {
+            board.gameEnded = true;
+            board.insufficientMaterial = true;
+            std::cout << "Draw by insufficient material" << std::endl;
+            return;
+        }
     
         bool isTherePossibleMoves = false;
         for (int fromSquare = 0; fromSquare < 64; fromSquare++) {
@@ -336,3 +344,51 @@ int is_in_check(Board board) {
     
     return 0;
 }
+
+bool insufficient_material(Board &board) {
+    int whiteBishops = 0;
+    int blackBishops = 0;
+    int whiteKnights = 0;
+    int blackKnights = 0;
+    for (int i = 0; i < 64; i++) {
+        int piece = board.squares[i];
+        int pieceType = Piece::get_piece_type(piece);
+        if (pieceType == Piece::Pawn || pieceType == Piece::Rook || pieceType == Piece::Queen) {
+            return false;
+        }
+        else if (pieceType == Piece::Bishop) {
+            if (Piece::get_piece_color(piece) == Piece::White)
+                whiteBishops++;
+            else
+                blackBishops++;
+        }
+        else if (pieceType == Piece::Knight) {
+            if (Piece::get_piece_color(piece) == Piece::White)
+                whiteKnights++;
+            else
+                blackKnights++;
+        }
+    }
+
+    if (whiteKnights > 1 || blackKnights > 1 || whiteBishops > 1 || blackBishops > 1)
+        return 0;
+    else if (whiteKnights == 0) {
+        if (whiteBishops == 0 && blackBishops == 0)
+            return true;
+        else if (whiteBishops == 1 && blackBishops == 0)
+            return true;
+        else if (whiteBishops == 0 && blackBishops == 1 && blackKnights == 0)
+            return true;
+    }
+    else if (blackKnights == 0) {
+        if (whiteBishops == 0 && blackBishops == 0)
+            return true;
+        else if (whiteBishops == 1 && blackBishops == 0)
+            return true;
+        else if (whiteBishops == 0 && blackBishops == 1)
+            return true;
+    }
+
+    return false;
+}
+

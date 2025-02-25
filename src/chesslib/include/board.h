@@ -17,6 +17,8 @@ class Board {
         bool gameEnded;
         int colorWinner;
         bool stalemate;
+        bool drawByRepetition;
+        bool insufficientMaterial;
         struct SquareState squareState[64];
 
         Board();
