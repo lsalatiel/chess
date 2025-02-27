@@ -43,8 +43,10 @@ std::list<int> Move::get_moves_for_square(int fromSquare) {
 }
 
 void Move::generate_moves(Board &board, std::unordered_map<int, std::list<int>> &possibleMoves, bool handleCheck) {
-    if (handleCheck)
+    if (handleCheck) {
         Move::possibleMoves.clear();
+        board.evaluate_board();
+    }
 
     for (int fromSquare = 0; fromSquare < 64; fromSquare++) {
         int piece = board.squares[fromSquare];

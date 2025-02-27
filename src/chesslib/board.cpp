@@ -28,6 +28,12 @@ void Board::reset() {
     stalemate = false;
     drawByRepetition = false;
     insufficientMaterial = false;
+    boardEvaluation.whiteMaterial = 0;
+    boardEvaluation.blackMaterial = 0;
+}
+
+void Board::evaluate_board() {
+    boardEvaluation.evaluate(this->squares);
 }
 
 // 0: invalid move, 1: valid move, 2: white wins, 3: black wins, 4: draw

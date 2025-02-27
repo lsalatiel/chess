@@ -1,3 +1,4 @@
+#include "board_evaluation.h"
 #if !defined(CHESSLIB_BOARD_H)
 #define CHESSLIB_BOARD_H
 
@@ -20,6 +21,7 @@ class Board {
         bool drawByRepetition;
         bool insufficientMaterial;
         struct SquareState squareState[64];
+        BoardEvaluation boardEvaluation = BoardEvaluation();
 
         Board();
         Board(std::string fen);
@@ -28,6 +30,7 @@ class Board {
 
         static void load_position_from_fen(std::string fen, Board &board);
         int make_move(int fromSquare, int toSquare, int piece, std::list<int> &moves, bool simulate);
+        void evaluate_board();
 };
 
 #endif
